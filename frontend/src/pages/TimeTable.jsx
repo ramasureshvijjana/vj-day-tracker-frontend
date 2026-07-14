@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "../api";
 import { formatTimeRange12h } from "../utils/time";
+import { groupOverlapping } from "../utils/overlap";
 
 const CATEGORY_ICON = { task: "📝", food: "🍽️", gym: "🏋️" };
 
@@ -72,35 +73,49 @@ export default function TimeTable() {
           <p>Nothing scheduled for this day yet. Add items on the Set Tasks page.</p>
         </div>
       ) : (
-        logs
-          .slice()
-          .sort((a, b) => a.start_time.localeCompare(b.start_time))
-          .map((log) => (
-            <div key={log.id} className={`timetable-row ${log.category} status-${log.status}`}>
-              <div className={`category-badge ${log.category}`}>{CATEGORY_ICON[log.category]}</div>
-              <div className="row-info">
-                <span className="item-name">{log.item}</span>
-                <span className="item-time">
-                  {formatTimeRange12h(log.start_time.slice(0, 5), log.end_time.slice(0, 5))}
-                </span>
-              </div>
-              <div className="status-toggle">
-                <button
-                  className={"status-btn done" + (log.status === "done" ? " active" : "")}
-                  onClick={() => setStatus(log, "done")}
-                >
-                  <span className="status-dot" /> Done
-                </button>
-                <button
-                  className={"status-btn not_done" + (log.status === "not_done" ? " active" : "")}
-                  onClick={() => setStatus(log, "not_done")}
-                >
-                  <span className="status-dot" /> Not done
-                </button>
-              </div>
+        groupOverlapping(
+          logs.slice().sort((a, b) => a.start_time.localeCompare(b.start_time))
+        ).map((group, idx) =>
+          group.length > 1 ? (
+            <div className="overlap-group" key={`group-${idx}`}>
+              <span className="overlap-badge">⏱ Overlapping timing</span>
+              {group.map((log) => (
+                <TimetableRow key={log.id} log={log} setStatus={setStatus} />
+              ))}
             </div>
-          ))
+          ) : (
+            <TimetableRow key={group[0].id} log={group[0]} setStatus={setStatus} />
+          )
+        )
       )}
     </>
+  );
+}
+
+function TimetableRow({ log, setStatus }) {
+  return (
+    <div className={`timetable-row ${log.category} status-${log.status}`}>
+      <div className={`category-badge ${log.category}`}>{CATEGORY_ICON[log.category]}</div>
+      <div className="row-info">
+        <span className="item-name">{log.item}</span>
+        <span className="item-time">
+          {formatTimeRange12h(log.start_time.slice(0, 5), log.end_time.slice(0, 5))}
+        </span>
+      </div>
+      <div className="status-toggle">
+        <button
+          className={"status-btn done" + (log.status === "done" ? " active" : "")}
+          onClick={() => setStatus(log, "done")}
+        >
+          <span className="status-dot" /> Done
+        </button>
+        <button
+          className={"status-btn not_done" + (log.status === "not_done" ? " active" : "")}
+          onClick={() => setStatus(log, "not_done")}
+        >
+          <span className="status-dot" /> Not done
+        </button>
+      </div>
+    </div>
   );
 }
