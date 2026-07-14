@@ -1,3 +1,5 @@
+import { formatTimeRange12h } from "../utils/time";
+
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function recurrenceLabel(t) {
@@ -26,9 +28,7 @@ export default function TaskList({ templates, onEdit, onDelete }) {
         .sort((a, b) => a.start_time.localeCompare(b.start_time))
         .map((t) => (
           <div className="item-row" key={t.id}>
-            <span className="item-time">
-              {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}
-            </span>
+            <span className="item-time">{formatTimeRange12h(t.start_time.slice(0, 5), t.end_time.slice(0, 5))}</span>
             <div style={{ flex: 1 }}>
               <div className="item-name">{t.item}</div>
               <div className="item-meta">{recurrenceLabel(t)}</div>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "../api";
+import { formatTimeRange12h } from "../utils/time";
 
 const CATEGORY_ICON = { task: "📝", food: "🍽️", gym: "🏋️" };
 
@@ -80,7 +81,7 @@ export default function TimeTable() {
               <div className="row-info">
                 <span className="item-name">{log.item}</span>
                 <span className="item-time">
-                  {log.start_time.slice(0, 5)}–{log.end_time.slice(0, 5)}
+                  {formatTimeRange12h(log.start_time.slice(0, 5), log.end_time.slice(0, 5))}
                 </span>
               </div>
               <div className="status-toggle">
