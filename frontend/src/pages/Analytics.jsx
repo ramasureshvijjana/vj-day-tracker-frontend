@@ -23,8 +23,8 @@ const MODES = [
   { key: "yearly", label: "Yearly" },
 ];
 
-const CATEGORY_COLORS = { task: "#7c57c9", food: "#3fae83", gym: "#ef7b72" };
-const CATEGORY_LABEL = { task: "Daily Task", food: "Food", gym: "Gym" };
+const TYPE_COLORS = { activity: "#7c57c9", food: "#3fae83", gym: "#ef7b72" };
+const TYPE_LABEL = { activity: "Activity", food: "Food", gym: "Gym" };
 
 function formatBucketLabel(bucket, mode) {
   if (mode === "yearly") {
@@ -56,7 +56,7 @@ export default function Analytics() {
   }, [mode, load]);
 
   const pieData = data
-    ? Object.entries(data.by_category).map(([cat, v]) => ({ name: CATEGORY_LABEL[cat], value: v.total, cat }))
+    ? Object.entries(data.by_type).map(([t, v]) => ({ name: TYPE_LABEL[t], value: v.total, t }))
     : [];
 
   const barData = data
@@ -146,7 +146,7 @@ export default function Analytics() {
                 <PieChart>
                   <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={4}>
                     {pieData.map((entry) => (
-                      <Cell key={entry.cat} fill={CATEGORY_COLORS[entry.cat]} />
+                      <Cell key={entry.t} fill={TYPE_COLORS[entry.t]} />
                     ))}
                   </Pie>
                   <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #efe9fa", fontSize: 13 }} />
@@ -154,8 +154,8 @@ export default function Analytics() {
               </ResponsiveContainer>
               <div className="legend-row">
                 {pieData.map((entry) => (
-                  <span key={entry.cat}>
-                    <span className="legend-dot" style={{ background: CATEGORY_COLORS[entry.cat] }} />
+                  <span key={entry.t}>
+                    <span className="legend-dot" style={{ background: TYPE_COLORS[entry.t] }} />
                     {entry.name} ({entry.value})
                   </span>
                 ))}
@@ -165,11 +165,11 @@ export default function Analytics() {
 
           <div className="chart-grid" style={{ marginTop: 20 }}>
             <div className="card chart-card">
-              <div className="chart-title">By category completion rate</div>
-              {Object.entries(data.by_category).map(([cat, v]) => (
-                <div key={cat} style={{ marginBottom: 14 }}>
+              <div className="chart-title">By type completion rate</div>
+              {Object.entries(data.by_type).map(([t, v]) => (
+                <div key={t} style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                    <span style={{ fontWeight: 600 }}>{CATEGORY_LABEL[cat]}</span>
+                    <span style={{ fontWeight: 600 }}>{TYPE_LABEL[t]}</span>
                     <span style={{ color: "var(--ink-400)" }}>{v.completion_rate}%</span>
                   </div>
                   <div style={{ height: 10, borderRadius: 999, background: "#f1eef8", overflow: "hidden" }}>
@@ -177,7 +177,7 @@ export default function Analytics() {
                       style={{
                         height: "100%",
                         width: `${v.completion_rate}%`,
-                        background: CATEGORY_COLORS[cat],
+                        background: TYPE_COLORS[t],
                         borderRadius: 999,
                         transition: "width 0.4s ease",
                       }}

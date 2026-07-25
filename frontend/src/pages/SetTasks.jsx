@@ -3,87 +3,87 @@ import api from "../api";
 import TaskForm from "../components/TaskForm";
 import TaskList from "../components/TaskList";
 
-const TABS = [
-  { key: "task", label: "Daily Task", cls: "task" },
-  { key: "food", label: "Food", cls: "food" },
-  { key: "gym", label: "Gym", cls: "gym" },
+const SECTIONS = [
+  { key: "daily", label: "Daily Tasks", endpoint: "/daily-tasks" },
+  { key: "weekly", label: "Weekly Tasks", endpoint: "/weekly-tasks" },
+  { key: "one_time", label: "One-time Tasks", endpoint: "/one-time-tasks" },
 ];
 
 export default function SetTasks() {
-  const [activeTab, setActiveTab] = useState("task");
-  const [templates, setTemplates] = useState([]);
+  const [activeSection, setActiveSection] = useState("daily");
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingTemplate, setEditingTemplate] = useState(null);
 
-  const load = useCallback(async (category) => {
+  const endpoint = SECTIONS.find((s) => s.key === activeSection).endpoint;
+
+  const load = useCallback(async (ep) => {
     setLoading(true);
     try {
-      const { data } = await api.get("/templates", { params: { category } });
-      setTemplates(data);
+      const { data } = await api.get(ep);
+      setTasks(data);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    setEditingTemplate(null);
-    load(activeTab);
-  }, [activeTab, load]);
+    load(endpoint);
+  }, [endpoint, load]);
+
+  const switchSection = (key) => {
+    setActiveSection(key);
+    setTasks([]);
+    setLoading(true);
+  };
 
   const handleSave = async (payload) => {
-    if (editingTemplate) {
-      await api.put(`/templates/${editingTemplate.id}`, payload);
-      setEditingTemplate(null);
-    } else {
-      await api.post("/templates", payload);
-    }
-    load(activeTab);
+    await api.post(endpoint, payload);
+    load(endpoint);
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this scheduled item? This also clears its history.")) return;
-    await api.delete(`/templates/${id}`);
-    load(activeTab);
+    const warning =
+      activeSection === "one_time"
+        ? "Delete this one-time task?"
+        : "Delete this task? It stops appearing from today onward. Any day you've already marked done/not_done — including today — stays exactly as recorded.";
+    if (!confirm(warning)) return;
+    await api.delete(`${endpoint}/${id}`);
+    load(endpoint);
   };
 
   return (
     <>
       <div className="page-header">
         <span className="page-eyebrow">Set Tasks</span>
-        <h1 className="page-title">Build your three timetables</h1>
+        <h1 className="page-title">Build your schedule</h1>
         <p className="page-subtitle">
-          Set up daily task, food and gym schedules separately. Each item can repeat every day, on
-          specific days of the week, or just once.
+          Daily tasks repeat every day, weekly tasks repeat only on the days you pick, and
+          one-time tasks apply to a single date. Give each item a type — Activity, Food or Gym —
+          so it's easy to spot on your Timetable and Analytics.
         </p>
       </div>
 
       <div className="tab-row">
-        {TABS.map((tab) => (
+        {SECTIONS.map((section) => (
           <button
-            key={tab.key}
-            className={"tab-btn " + tab.cls + (activeTab === tab.key ? " active" : "")}
-            onClick={() => setActiveTab(tab.key)}
+            key={section.key}
+            className={"tab-btn" + (activeSection === section.key ? " active" : "")}
+            onClick={() => switchSection(section.key)}
           >
-            <span className="dot" />
-            {tab.label}
+            {section.label}
           </button>
         ))}
       </div>
 
       <div className="card">
-        <TaskForm
-          category={activeTab}
-          editingTemplate={editingTemplate}
-          onSave={handleSave}
-          onCancelEdit={() => setEditingTemplate(null)}
-        />
+        <TaskForm key={activeSection} section={activeSection} onSave={handleSave} />
       </div>
 
       <div style={{ marginTop: 24 }}>
         {loading ? (
           <p className="loading-text">Loading schedule…</p>
         ) : (
-          <TaskList templates={templates} onEdit={setEditingTemplate} onDelete={handleDelete} />
+          <TaskList section={activeSection} tasks={tasks} onDelete={handleDelete} />
         )}
       </div>
     </>

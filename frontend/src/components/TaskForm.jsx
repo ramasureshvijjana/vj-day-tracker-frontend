@@ -1,35 +1,26 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+const TYPE_OPTIONS = [
+  { value: "activity", label: "Activity" },
+  { value: "food", label: "Food" },
+  { value: "gym", label: "Gym" },
+];
 
 const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const emptyForm = {
+  type: "activity",
   item: "",
   start_time: "07:00",
   end_time: "08:00",
-  recurrence: "daily",
+  specific_date: new Date().toISOString().slice(0, 10),
   days_of_week: [],
-  specific_date: "",
 };
 
-export default function TaskForm({ category, editingTemplate, onSave, onCancelEdit }) {
+export default function TaskForm({ section, onSave }) {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (editingTemplate) {
-      setForm({
-        item: editingTemplate.item,
-        start_time: editingTemplate.start_time.slice(0, 5),
-        end_time: editingTemplate.end_time.slice(0, 5),
-        recurrence: editingTemplate.recurrence,
-        days_of_week: editingTemplate.days_of_week || [],
-        specific_date: editingTemplate.specific_date || "",
-      });
-    } else {
-      setForm(emptyForm);
-    }
-  }, [editingTemplate]);
 
   const toggleDay = (day) => {
     setForm((f) => ({
@@ -48,34 +39,41 @@ export default function TaskForm({ category, editingTemplate, onSave, onCancelEd
       setError("End time must be after start time.");
       return;
     }
-    if (form.recurrence === "weekly" && form.days_of_week.length === 0) {
-      setError("Pick at least one day of the week.");
+    if (section === "one_time" && !form.specific_date) {
+      setError("Pick a date for this one-time task.");
       return;
     }
-    if (form.recurrence === "once" && !form.specific_date) {
-      setError("Pick a date for a one-time item.");
+    if (section === "weekly" && form.days_of_week.length === 0) {
+      setError("Pick at least one day of the week.");
       return;
     }
 
     setSaving(true);
     try {
-      await onSave({
-        category,
+      const payload = {
+        type: form.type,
         item: form.item.trim(),
         start_time: form.start_time,
         end_time: form.end_time,
-        recurrence: form.recurrence,
-        days_of_week: form.recurrence === "weekly" ? form.days_of_week : [],
-        specific_date: form.recurrence === "once" ? form.specific_date : null,
-        is_active: true,
-      });
-      setForm(emptyForm);
+      };
+      if (section === "one_time") {
+        payload.specific_date = form.specific_date;
+      }
+      if (section === "weekly") {
+        payload.days_of_week = form.days_of_week;
+      }
+      await onSave(payload);
+      setForm({ ...emptyForm, specific_date: form.specific_date, days_of_week: form.days_of_week });
     } catch (err) {
       setError(err?.response?.data?.detail || err.message || "Failed to save");
     } finally {
       setSaving(false);
     }
   };
+
+  const submitLabel = { daily: "Add to daily schedule", weekly: "Add weekly task", one_time: "Add one-time task" }[
+    section
+  ];
 
   return (
     <form onSubmit={handleSubmit}>
@@ -85,9 +83,7 @@ export default function TaskForm({ category, editingTemplate, onSave, onCancelEd
           <input
             value={form.item}
             onChange={(e) => setForm({ ...form, item: e.target.value })}
-            placeholder={
-              category === "food" ? "e.g. Grilled chicken salad" : category === "gym" ? "e.g. Leg day" : "e.g. Deep work block"
-            }
+            placeholder="e.g. Deep work block"
             required
           />
         </div>
@@ -113,18 +109,29 @@ export default function TaskForm({ category, editingTemplate, onSave, onCancelEd
 
       <div className="form-grid" style={{ marginTop: 14 }}>
         <div className="field">
-          <label>Series</label>
-          <select
-            value={form.recurrence}
-            onChange={(e) => setForm({ ...form, recurrence: e.target.value })}
-          >
-            <option value="daily">Every day</option>
-            <option value="weekly">Specific days of the week</option>
-            <option value="once">One-time (specific date)</option>
+          <label>Type</label>
+          <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+            {TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
 
-        {form.recurrence === "weekly" && (
+        {section === "one_time" && (
+          <div className="field">
+            <label>Date</label>
+            <input
+              type="date"
+              value={form.specific_date}
+              onChange={(e) => setForm({ ...form, specific_date: e.target.value })}
+              required
+            />
+          </div>
+        )}
+
+        {section === "weekly" && (
           <div className="field" style={{ gridColumn: "span 2" }}>
             <label>Days</label>
             <div className="day-picker">
@@ -141,31 +148,14 @@ export default function TaskForm({ category, editingTemplate, onSave, onCancelEd
             </div>
           </div>
         )}
-
-        {form.recurrence === "once" && (
-          <div className="field">
-            <label>Date</label>
-            <input
-              type="date"
-              value={form.specific_date}
-              onChange={(e) => setForm({ ...form, specific_date: e.target.value })}
-              required
-            />
-          </div>
-        )}
       </div>
 
       {error && <p className="error-text">{error}</p>}
 
-      <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+      <div style={{ marginTop: 18 }}>
         <button className="btn btn-primary" type="submit" disabled={saving}>
-          {saving ? "Saving…" : editingTemplate ? "Save changes" : "Add to schedule"}
+          {saving ? "Saving…" : submitLabel}
         </button>
-        {editingTemplate && (
-          <button type="button" className="btn btn-ghost" onClick={onCancelEdit}>
-            Cancel
-          </button>
-        )}
       </div>
     </form>
   );

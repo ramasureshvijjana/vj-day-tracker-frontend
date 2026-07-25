@@ -434,6 +434,27 @@ select:focus-visible {
   font-size: 14.5px;
 }
 
+.type-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--lav-100);
+  color: var(--lav-700);
+  white-space: nowrap;
+}
+
+.type-badge.food {
+  background: var(--mint-100);
+  color: var(--mint-700);
+}
+
+.type-badge.gym {
+  background: var(--coral-100);
+  color: var(--coral-600);
+}
+
 .item-time {
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -512,6 +533,16 @@ select:focus-visible {
 
 .progress-summary strong {
   color: var(--ink-900);
+}
+
+.past-day-banner {
+  background: linear-gradient(120deg, var(--mint-50), var(--lav-50));
+  border: 1.5px dashed var(--lav-400);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  font-size: 13px;
+  color: var(--ink-600);
+  margin-bottom: 18px;
 }
 
 .timetable-row {
@@ -637,6 +668,131 @@ select:focus-visible {
   height: 8px;
   border-radius: 50%;
   background: currentColor;
+}
+
+.row-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.row-icon-actions {
+  display: flex;
+  gap: 2px;
+}
+
+/* Per-day edit mode */
+.timetable-row.editing {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  border-left-color: var(--lav-600);
+}
+
+.edit-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.edit-item-input {
+  flex: 1;
+  border: 1.5px solid #e9e3f5;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  background: var(--paper-soft);
+  color: var(--ink-900);
+}
+
+.edit-item-input:focus {
+  border-color: var(--lav-600);
+  background: var(--paper);
+}
+
+.edit-time-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 52px;
+  font-size: 13px;
+  color: var(--ink-400);
+}
+
+.edit-time-row input[type="time"] {
+  border: 1.5px solid #e9e3f5;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  background: var(--paper-soft);
+}
+
+.edit-note {
+  margin: -4px 0 0 52px;
+  font-size: 12px;
+  color: var(--ink-400);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 52px;
+}
+
+@media (max-width: 640px) {
+  .timetable-row {
+    grid-template-columns: 40px 1fr;
+    grid-template-areas:
+      "badge info"
+      "toggle toggle";
+    row-gap: 14px;
+    padding: 14px;
+  }
+
+  .category-badge {
+    grid-area: badge;
+  }
+
+  .row-info {
+    grid-area: info;
+    min-width: 0;
+  }
+
+  .row-info .item-name {
+    word-break: break-word;
+  }
+
+  .row-controls {
+    grid-area: toggle;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .status-toggle {
+    width: 100%;
+  }
+
+  .status-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .row-icon-actions {
+    justify-content: center;
+  }
+
+  .overlap-group .timetable-row {
+    padding: 14px;
+  }
+
+  .edit-time-row,
+  .edit-actions,
+  .edit-note {
+    margin-left: 0;
+  }
 }
 
 /* ===================== ANALYTICS ===================== */
